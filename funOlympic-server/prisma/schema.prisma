@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+ id         Int      @id @default(autoincrement())
+ name       String  
+ email      String
+ sport      String?
+ phone      String
+ country    String
+ roles      Role @default(USER)
+ password   String
+ profile    profile?
+ message    message[]
+ resetRequest Boolean @default(false)
+ createdAt   DateTime   @default(now())
+ updatedAt   DateTime   @updatedAt
+ @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model profile {
+  id Int @id @default(autoincrement())
+  bio String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int @unique
+}
+
+model category {
+  id Int @id @default(autoincrement())
+  sport String
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  events events[]
+}
+
+model events {
+  id Int @id @default(autoincrement())
+	category category? @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  category_id Int?
+  eventTitle String
+  description String
+  startDate DateTime  @default(now())
+  endDate DateTime    @default(now())
+  thumbnail String
+  published Boolean
+  liveChatEnabled Boolean
+  streamLink String
+  comments comments[]
+  livechat livechat?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model livechat {
+  id Int @id @default(autoincrement())
+  
+  events events @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  
+  message message[]
+    
+  event_id Int @unique
+}
+
+model comments {
+  id Int @id @default(autoincrement())
+  events events @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  message message[]
+  event_id Int
+}
+
+model message {
+  id Int @id @default(autoincrement())
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  livechat livechat? @relation(fields: [livechat_id], references: [id], onDelete: Cascade)
+  comments comments? @relation(fields: [comment_id], references: [id] , onDelete: Cascade)
+
+  messageType  messageType @default(COMMENT)
+  user_id Int
+  body        String
+  livechat_id Int?
+  comment_id Int?
+}
+
+enum messageType{
+  LIVECHAT
+  COMMENT
+}
